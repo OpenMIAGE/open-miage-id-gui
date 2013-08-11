@@ -1,0 +1,50 @@
+
+.form-signin {
+    max-width: 420px;
+    padding: 19px 29px 29px;
+    background-color: whitesmoke;
+}
+
+@media (min-width: 480px) {
+    .form-signin {
+        margin: 0 auto 20px;
+        border: 1px solid #e5e5e5;
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 5px 5px 5px #888;
+        -moz-box-shadow: 5px 5px 5px #888;
+        box-shadow: 5px 5px 5px #888;
+    }
+}
+
+@media (max-width: 500px) {
+    .container-fluid {
+        padding: 0px;
+    }
+    
+    .form-signin {
+        margin: 0px;
+    }
+    
+    .body {
+        padding: 0px;
+    }
+}
+
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+    margin-bottom: 10px;
+}
+.form-signin input[type="text"],
+.form-signin input[type="password"]{
+    font-size: 16px;
+    height: auto;
+    margin-bottom: 15px;
+    padding: 7px 9px;
+}
+
+.checkbox-middle {
+    vertical-align: top;
+    margin-top: 10px;
+}
