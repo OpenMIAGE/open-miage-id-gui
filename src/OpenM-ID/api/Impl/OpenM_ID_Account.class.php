@@ -330,7 +330,12 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
         $smarty->assign("message", $message);
         self::setDirs($smarty);
         self::addLinks($smarty);
-        $smarty->display('error.tpl');
+        try {
+            $smarty->display('error.tpl');
+        } catch (Exception $e) {
+            OpenM_Log::error($e->getTraceAsString());
+            die("internal error occurs... try again later");
+        }
         die();
     }
 
@@ -352,6 +357,14 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
         $smarty->setConfigDir(dirname(dirname(__DIR__)) . '/gui/config/');
         $smarty->setCompileDir(self::$template_c);
         $smarty->assign(self::SMARTY_RESOURCES_DIR_VAR_NAME, self::$resources_dir);
+    }
+
+    private static function display(Smarty $s, $tpl) {
+        try {
+            $s->display($tpl);
+        } catch (Exception $e) {
+            die("internal error occurs... try again later");
+        }
     }
 
 }
