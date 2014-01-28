@@ -56,7 +56,7 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
         self::$resources_dir = $p->get(self::RESOURCES_DIR);
         if (self::$resources_dir == null)
             throw new OpenM_ServiceImplException(self::RESOURCES_DIR . " not defined in " . self::CONFIG_FILE_NAME);
-        self::$defaultAccountActivation = ($p->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
+        self::$defaultAccountActivation = ($p2->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
     }
 
     public static function create() {
