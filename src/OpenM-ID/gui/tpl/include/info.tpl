@@ -1,6 +1,6 @@
 <div class="span8 hidden-phone">
     <div class="hero-unit">
-        <h1>Bienvenue dans la galaxie OpenMIAGE !</h1>
+        <h1>Bienvenu dans la galaxie OpenMIAGE !</h1>
         <p></p>
         <p>
             Première visite ? N'hesitez pas à vous inscrire !
