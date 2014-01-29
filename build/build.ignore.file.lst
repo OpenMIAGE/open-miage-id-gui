@@ -1,2 +1,8 @@
 Config/OpenM-DAO.config.properties
 http/error_log
+store/associations
+store/nonces
+store/temp
+store/toDelete
+log/OpenM_ID.log
+log/toDelete
