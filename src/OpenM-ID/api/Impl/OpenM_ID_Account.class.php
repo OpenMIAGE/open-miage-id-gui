@@ -132,6 +132,7 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
     const PASSWORD_PARAMETER = "password";
     const HEAD_PARAMETER = "head";
     const EMBEDED_PARAMETER = "embeded";
+    const RETURN_TO_IN_SESSION = "OpenM_ID.return_to";
 
     public static function login() {
         self::init();
@@ -271,6 +272,7 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
 
     private static function connected(HashtableString $user) {
         if (self::isReturnTo()) {
+            OpenM_SessionController::remove(self::RETURN_TO_IN_SESSION);
             OpenM_Log::debug("return_to found and use for redirection", __CLASS__, __METHOD__, __LINE__);
             OpenM_Header::redirect(self::getReturnTo());
         } else {
@@ -299,7 +301,7 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
     }
 
     private static function getReturnTo() {
-        if (self::$returnTo != null)
+        if (self::$returnTo !== null)
             return self::$returnTo;
 
         $method = $_SERVER["REQUEST_METHOD"];
@@ -316,7 +318,12 @@ class OpenM_ID_Account extends OpenM_ServiceImpl {
                 break;
         }
 
+        if ($returnTo == null)
+            $returnTo = OpenM_SessionController::get(self::RETURN_TO_IN_SESSION);
+
+        OpenM_SessionController::set(self::RETURN_TO_IN_SESSION, $returnTo);
         self::$returnTo = OpenM_URL::decode($returnTo);
+
         return self::$returnTo;
     }
 
