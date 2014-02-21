@@ -15,15 +15,6 @@ if (isset($_GET["api"]) || OpenM_RESTDefaultServer::containsHelpKeyWork(array_ke
 } else if (isset($_GET[OpenM_ID::URI_API])) {
     Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
     OpenM_ID_Account::uriDisplay();
-} else if (isset($_GET[OpenM_ID::LOGIN_API])) {
-    Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
-    OpenM_ID_Account::login();
-} else if (isset($_GET[OpenM_ID::LOGOUT_API])) {
-    Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
-    OpenM_ID_Account::logout();
-} else if (isset($_GET[OpenM_ID::CREATE_API])) {
-    Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
-    OpenM_ID_Account::create();
 } else {
     Import::php("OpenM-ID.api.Impl.OpenM_OpenID");
     OpenM_OpenID::handle();
