@@ -6,17 +6,21 @@ require_once 'lib.php';
 
 Import::php("OpenM-Controller.api.OpenM_RESTDefaultServer");
 Import::php("OpenM-ID.api.OpenM_ID");
+Import::php("OpenM-ID.api.Impl.OpenM_OpenID");
 
 if (isset($_GET["api"]) || OpenM_RESTDefaultServer::containsHelpKeyWork(array_keys($_GET))) {
     OpenM_RESTDefaultServer::handle(array("OpenM_ID"));
 } else if (isset($_GET[OpenM_ID::GetOpenID_API])) {
-    Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
-    OpenM_ID_Account::getOpenID();
+    OpenM_OpenID::getOpenID();
 } else if (isset($_GET[OpenM_ID::URI_API])) {
-    Import::php("OpenM-ID.api.Impl.OpenM_ID_Account");
-    OpenM_ID_Account::uriDisplay();
+    OpenM_OpenID::uriDisplay();
+} else if (isset($_GET[OpenM_ID::LOGOUT_API])) {
+    OpenM_OpenID::logout();
+} else if (isset($_GET[OpenM_ID::LOGIN_API])) {
+    Import::php("OpenM-ID.api.Impl.OpenM_IDReturnToController");
+    $returnTo = new OpenM_IDReturnToController();
+    OpenM_Header::redirect("user/?" . $returnTo->getReturnTo());
 } else {
-    Import::php("OpenM-ID.api.Impl.OpenM_OpenID");
     OpenM_OpenID::handle();
 }
 ?>

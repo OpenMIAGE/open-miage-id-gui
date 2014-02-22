@@ -41,6 +41,5 @@
                 {include file='include/info.tpl'}
             </div>
         </div>
-        {include file='include/hideBanner.tpl'}
     </body>
 </html>

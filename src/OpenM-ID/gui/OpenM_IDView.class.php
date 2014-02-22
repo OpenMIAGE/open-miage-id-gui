@@ -34,7 +34,6 @@ class OpenM_IDView extends OpenM_ServiceView {
     const DEFAULT_ACTIVATION = "OpenM_ID_Account.activation.default";
     const DEFAULT_ACTIVATION_OK = "true";
 
-    private $returnTo;
     private $smarty;
     private static $secret;
     private static $hashAlgo;
@@ -49,7 +48,7 @@ class OpenM_IDView extends OpenM_ServiceView {
     }
 
     public function _default() {
-        
+        $this->login();
     }
 
     private static function init() {
@@ -77,6 +76,88 @@ class OpenM_IDView extends OpenM_ServiceView {
         if (self::$resources_dir == null)
             throw new OpenM_ServiceViewException(self::RESOURCES_DIR . " not defined in " . self::CONFIG_FILE_NAME);
         self::$defaultAccountActivation = ($p2->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
+    }
+
+    const REMEMBER_ME_PARAMETER = "remember-me";
+    const REMEMBER_ME_ON_PAREMETER_VALUE = "on";
+    const MAIL_PARAMETER = "mail";
+    const ERROR_PARAMETER = "error";
+    const PASSWORD_PARAMETER = "password";
+    const HEAD_PARAMETER = "head";
+
+    public function login() {
+        OpenM_Log::debug("API initialized", __CLASS__, __METHOD__, __LINE__);
+        OpenM_Log::debug("Check if a user is connected", __CLASS__, __METHOD__, __LINE__);
+        $user = OpenM_ID_ConnectedUserController::get();
+        if ($user != null)
+            $this->connected($user);
+
+        OpenM_Log::debug("No user connected", __CLASS__, __METHOD__, __LINE__);
+
+        $post = HashtableString::from($_POST);
+        $get = HashtableString::from($_GET);
+
+        $rememberMe = ($post->get(self::REMEMBER_ME_PARAMETER) == self::REMEMBER_ME_ON_PAREMETER_VALUE);
+
+        if ($post->containsKey(self::MAIL_PARAMETER)) {
+            OpenM_Log::debug("A mail is given in POST", __CLASS__, __METHOD__, __LINE__);
+            if (!OpenM_MailTool::isEMailValid($post->get(self::MAIL_PARAMETER))) {
+                OpenM_Log::debug("Mail given is not a valid mail", __CLASS__, __METHOD__, __LINE__);
+                $this->smarty->assign(self::ERROR_PARAMETER, array(
+                    self::MAIL_PARAMETER => "mail not valid"
+                ));
+            } else {
+                OpenM_Log::debug("Mail given is a valid mail (" . $_POST["mail"] . ")", __CLASS__, __METHOD__, __LINE__);
+                if (!$post->containsKey(self::PASSWORD_PARAMETER) || $post->get(self::PASSWORD_PARAMETER) == "") {
+                    OpenM_Log::debug("No password given", __CLASS__, __METHOD__, __LINE__);
+                    $this->smarty->assign(self::ERROR_PARAMETER, array(
+                        self::PASSWORD_PARAMETER => "password not valid"
+                    ));
+                } else {
+                    OpenM_Log::debug("Password given not empty", __CLASS__, __METHOD__, __LINE__);
+                    $userDao = new OpenM_UserDAO();
+                    $user = $userDao->get($post->get(self::MAIL_PARAMETER));
+                    if ($user == null) {
+                        OpenM_Log::debug("User not found in DAO", __CLASS__, __METHOD__, __LINE__);
+                        $this->smarty->assign(self::ERROR_PARAMETER, array(
+                            self::HEAD_PARAMETER => "mail or password not valid"
+                        ));
+                    } else {
+                        OpenM_Log::debug("User found in DAO", __CLASS__, __METHOD__, __LINE__);
+                        $userPassword = self::getPassword($post->get(self::PASSWORD_PARAMETER));
+                        if ($user->get(OpenM_UserDAO::USER_PASSWORD) != $userPassword) {
+                            OpenM_Log::debug("Password not OK", __CLASS__, __METHOD__, __LINE__);
+                            $this->smarty->assign(self::ERROR_PARAMETER, array(
+                                self::HEAD_PARAMETER => "mail or password not valid"
+                            ));
+                        } else {
+                            OpenM_Log::debug("Password OK", __CLASS__, __METHOD__, __LINE__);
+                            if (!$user->get(OpenM_UserDAO::USER_IS_VALID)) {
+                                OpenM_Log::debug("User not valid", __CLASS__, __METHOD__, __LINE__);
+                                $this->smarty->assign(self::ERROR_PARAMETER, array(
+                                    self::HEAD_PARAMETER => "user not validated",
+                                ));
+                            } else {
+                                OpenM_Log::debug("User valid", __CLASS__, __METHOD__, __LINE__);
+                                OpenM_ID_ConnectedUserController::set($user, $rememberMe);
+                                self::connected($user);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $mail = $post->containsKey(self::MAIL_PARAMETER) ? $post->get(self::MAIL_PARAMETER) : ($get->containsKey(self::MAIL_PARAMETER) ? $get->get(self::MAIL_PARAMETER) : "");
+        $this->smarty->assign("action", OpenM_URLViewController::from(OpenM_URLViewController::viewFromClass($this->getClass()), "login")->getURL());
+        $this->smarty->assign("version", self::VERSION);
+        $this->smarty->assign("mail", $mail);
+        $this->smarty->assign("rememberMe", $rememberMe);
+        $returnTo = new OpenM_ID_ReturnToController();
+        $this->smarty->assign("return_to", $returnTo->getReturnTo());
+        $this->setDirs();
+        $this->addLinks();
+        $this->smarty->assign("lang", OpenM_URLViewController::getLang());
+        $this->smarty->display('login.tpl');
     }
 
     public function create() {
@@ -115,7 +196,7 @@ class OpenM_IDView extends OpenM_ServiceView {
                             $userDao->create($userId, $userMail, $userPassword, self::$defaultAccountActivation);
                             OpenM_Log::debug("User created", __CLASS__, __METHOD__, __LINE__);
                             OpenM_Log::debug("redirect to login page", __CLASS__, __METHOD__, __LINE__);
-                            $this->redirectToLogin();
+                            $this->_redirect("login");
                         } else {
                             OpenM_Log::debug("Password2 not same as Password", __CLASS__, __METHOD__, __LINE__);
                             $this->smarty->assign("error", array(
@@ -132,9 +213,10 @@ class OpenM_IDView extends OpenM_ServiceView {
             }
             OpenM_Log::debug("Display create account page", __CLASS__, __METHOD__, __LINE__);
             $this->smarty->assign("mail", $_POST["mail"]);
-            $this->smarty->assign("action", OpenM_URL::getURLwithoutParameters() . "?" . OpenM_ID::CREATE_API);
+            $this->smarty->assign("action", OpenM_URLViewController::from(OpenM_URLViewController::viewFromClass($this->getClass()), "create")->getURL());
             $this->smarty->assign("version", self::VERSION);
-            $this->smarty->assign("return_to", $this->getReturnTo());
+            $returnTo = new OpenM_ID_ReturnToController();
+            $this->smarty->assign("return_to", $returnTo->getReturnTo());
             $this->setDirs();
             $this->addLinks();
             $this->smarty->assign("lang", OpenM_URLViewController::getLang());
@@ -142,24 +224,12 @@ class OpenM_IDView extends OpenM_ServiceView {
         }
     }
 
-    private function redirectToLogin() {
-        OpenM_Header::redirect(OpenM_URLViewController::from(OpenM_URLViewController::viewFromClass($this->getClass()), "login")->getURL());
-    }
-
-    public function logout() {
-        OpenM_ID_ConnectedUserController::remove();
-        if ($this->isReturnTo())
-            $this->returnTo();
-        else {
-            $this->redirectToLogin();
-        }
-    }
-
     private function connected(HashtableString $user) {
         if ($this->isReturnTo()) {
             OpenM_SessionController::remove(self::RETURN_TO_IN_SESSION);
             OpenM_Log::debug("return_to found and use for redirection", __CLASS__, __METHOD__, __LINE__);
-            OpenM_Header::redirect($this->getReturnTo());
+            $returnTo = new OpenM_ID_ReturnToController();
+            OpenM_Header::redirect($returnTo->getReturnTo());
         } else {
             OpenM_Log::debug("display connected page", __CLASS__, __METHOD__, __LINE__);
             $this->smarty->assign("version", self::VERSION);
@@ -169,49 +239,6 @@ class OpenM_IDView extends OpenM_ServiceView {
             $this->addLinks();
             $this->smarty->display('connected.tpl');
         }
-    }
-
-    private function returnTo() {
-        if (!isset($_GET[OpenM_ID::NO_REDIRECT_TO_LOGIN_PARAMETER]))
-            OpenM_Header::redirect(OpenM_URL::getURLwithoutParameters() . "?" . OpenM_ID::LOGIN_API . (($this->isReturnTo()) ? "&return_to=" . $this->getReturnTo() : ""));
-        else if ($this->isReturnTo())
-            OpenM_Header::redirect($this->getReturnTo());
-        else {
-            OpenM_Log::warning("returnTo called without return_to parameter");
-            $this->errorDisplay("internal error occur");
-        }
-        die();
-    }
-
-    private function getReturnTo() {
-        if ($this->returnTo !== null)
-            return $this->returnTo;
-
-        $method = $_SERVER["REQUEST_METHOD"];
-        switch ($method) {
-            case "GET":
-                $returnTo = $_GET["return_to"];
-                break;
-            case "POST":
-                $returnTo = $_POST["return_to"];
-                break;
-
-            default:
-                $returnTo = null;
-                break;
-        }
-
-        if ($returnTo == null)
-            $returnTo = OpenM_SessionController::get(self::RETURN_TO_IN_SESSION);
-
-        OpenM_SessionController::set(self::RETURN_TO_IN_SESSION, $returnTo);
-        $this->returnTo = OpenM_URL::decode($returnTo);
-
-        return $this->returnTo;
-    }
-
-    private function isReturnTo() {
-        return $this->getReturnTo() != null;
     }
 
     public function errorDisplay($message = null) {
