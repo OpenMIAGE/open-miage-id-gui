@@ -6,6 +6,7 @@ if (!Import::php("Smarty"))
 Import::php("OpenM-Services.gui.OpenM_ServiceView");
 Import::php("util.OpenM_Log");
 Import::php("OpenM-ID.api.Impl.OpenM_ID_ConnectedUserController");
+Import::php("OpenM-ID.api.Impl.OpenM_ID_ReturnToController");
 
 /**
  * 
@@ -34,33 +35,18 @@ class OpenM_IDView extends OpenM_ServiceView {
     const DEFAULT_ACTIVATION = "OpenM_ID_Account.activation.default";
     const DEFAULT_ACTIVATION_OK = "true";
 
-    private $smarty;
     private static $secret;
     private static $hashAlgo;
-    private static $template_c;
-    private static $resources_dir;
     private static $defaultAccountActivation = false;
 
     public function __construct() {
         parent::__construct();
-        $this->smarty = new Smarty();
-        self::init();
-    }
-
-    public function _default() {
-        $this->login();
-    }
-
-    private static function init() {
         if (self::$secret !== null)
             return;
-        $p = Properties::fromFile(self::CONFIG_FILE_NAME);
-        if ($p->get(self::LOG_MODE_PROPERTY) == self::LOG_MODE_ACTIVATED)
-            OpenM_Log::init($p->get(self::LOG_PATH_PROPERTY), $p->get(self::LOG_LEVEL_PROPERTY), $p->get(self::LOG_FILE_NAME));
-        $path = $p->get(self::SPECIFIC_CONFIG_FILE_NAME);
+        $path = $this->properties->get(self::SPECIFIC_CONFIG_FILE_NAME);
         if ($path == null)
             throw new OpenM_ServiceViewException(self::SPECIFIC_CONFIG_FILE_NAME . " property is not defined in " . self::CONFIG_FILE_NAME);
-        $p2 = Properties::fromFile($path);
+        $p2 = Properties::fromFile(OpenM_SERVICE_CONFIG_DIRECTORY . "/" . $path);
         self::$secret = $p2->get(self::HASH_SECRET);
         if (self::$secret == null)
             throw new OpenM_ServiceViewException(self::HASH_SECRET . " property is not defined in $path");
@@ -69,13 +55,11 @@ class OpenM_IDView extends OpenM_ServiceView {
         self::$hashAlgo = $p2->get(self::HASH_ALGO);
         if (!OpenM_Crypto::isAlgoValid(self::$hashAlgo))
             throw new OpenM_ServiceViewException(self::HASH_ALGO . " property is not a valid crypto algo in $path");
-        self::$template_c = $p->get(self::SMARTY_TEMPLATE_C_DIR);
-        if (self::$template_c == null)
-            throw new OpenM_ServiceViewException(self::SMARTY_TEMPLATE_C_DIR . " not defined in " . self::CONFIG_FILE_NAME);
-        self::$resources_dir = $p->get(self::RESOURCES_DIR);
-        if (self::$resources_dir == null)
-            throw new OpenM_ServiceViewException(self::RESOURCES_DIR . " not defined in " . self::CONFIG_FILE_NAME);
         self::$defaultAccountActivation = ($p2->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
+    }
+
+    public function _default() {
+        $this->login();
     }
 
     const REMEMBER_ME_PARAMETER = "remember-me";
@@ -148,7 +132,7 @@ class OpenM_IDView extends OpenM_ServiceView {
             }
         }
         $mail = $post->containsKey(self::MAIL_PARAMETER) ? $post->get(self::MAIL_PARAMETER) : ($get->containsKey(self::MAIL_PARAMETER) ? $get->get(self::MAIL_PARAMETER) : "");
-        $this->smarty->assign("action", OpenM_URLViewController::from(OpenM_URLViewController::viewFromClass($this->getClass()), "login")->getURL());
+        $this->smarty->assign("action", OpenM_URLViewController::from($this->getClass(), "login")->getURL());
         $this->smarty->assign("version", self::VERSION);
         $this->smarty->assign("mail", $mail);
         $this->smarty->assign("rememberMe", $rememberMe);
@@ -213,7 +197,7 @@ class OpenM_IDView extends OpenM_ServiceView {
             }
             OpenM_Log::debug("Display create account page", __CLASS__, __METHOD__, __LINE__);
             $this->smarty->assign("mail", $_POST["mail"]);
-            $this->smarty->assign("action", OpenM_URLViewController::from(OpenM_URLViewController::viewFromClass($this->getClass()), "create")->getURL());
+            $this->smarty->assign("action", OpenM_URLViewController::from($this->getClass(), "create")->getURL());
             $this->smarty->assign("version", self::VERSION);
             $returnTo = new OpenM_ID_ReturnToController();
             $this->smarty->assign("return_to", $returnTo->getReturnTo());
@@ -256,23 +240,27 @@ class OpenM_IDView extends OpenM_ServiceView {
     }
 
     private function addLinks() {
-        $api = OpenM_URL::getDirURL();
         $this->smarty->assign("links", array(
-            "login" => $api . "?" . OpenM_ID::LOGIN_API,
-            "logout" => $api . "?" . OpenM_ID::LOGOUT_API,
-            "create" => $api . "?" . OpenM_ID::CREATE_API
+            "login" => OpenM_URLViewController::from($this->getClass(), "login")->getURL(),
+            "logout" => OpenM_URL::getDirURL() . "../" . "?" . OpenM_ID::LOGOUT_API,
+            "create" => OpenM_URLViewController::from($this->getClass(), "create")->getURL()
         ));
     }
 
     private function setDirs() {
         $this->smarty->setTemplateDir(__DIR__ . '/tpl/');
         $this->smarty->setConfigDir(__DIR__ . '/config/');
-        $this->smarty->setCompileDir(self::$template_c);
-        $this->smarty->assign(self::SMARTY_RESOURCES_DIR_VAR_NAME, self::$resources_dir);
+        $this->smarty->setCompileDir($this->template_c);
+        $this->smarty->setCacheDir($this->cache_dir);
+        $this->smarty->assign(self::SMARTY_RESOURCES_DIR_VAR_NAME, $this->resources_dir);
     }
 
     private function getPassword($password) {
         return OpenM_Crypto::hash(self::$hashAlgo, OpenM_URL::encode(self::$secret . $password . self::$secret));
+    }
+
+    public function error404() {
+        die("page not found");
     }
 
 }
