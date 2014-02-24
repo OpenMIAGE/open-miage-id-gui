@@ -23,7 +23,7 @@ Import::php("util.OpenM_Log");
  */
 abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
 
-    const VERSION = "1.0 beta";
+    const VERSION = "1.0.3";
 
 
     protected function addLinks() {

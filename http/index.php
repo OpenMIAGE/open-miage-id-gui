@@ -24,7 +24,8 @@ if (isset($_GET["api"]) || OpenM_RESTDefaultServer::containsHelpKeyWork(array_ke
 } else if (isset($_GET[OpenM_ID::LOGIN_API])) {
     Import::php("OpenM-ID.api.Impl.OpenM_ID_ReturnToController");
     $returnTo = new OpenM_ID_ReturnToController();
-    OpenM_Header::redirect("user/?" . $returnTo->getReturnTo());
+    $returnTo->save();
+    OpenM_Header::redirect("user");
 } else {
     OpenM_ID_OpenID::handle();
 }
