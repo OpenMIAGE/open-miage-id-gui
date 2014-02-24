@@ -7,7 +7,7 @@
     <body class="body">
         <div class="container-fluid">
             <div class="row-fluid">
-                <div class="span4">
+                <div class="col-md-4">
                     <form class="form-signin" method="POST" action="{$action}">
                         {config_load file="create."|cat:$lang|cat:".properties"}
                         <legend><h2>{#inscription_title#}</h2>(v{$version})</legend>
@@ -32,7 +32,7 @@
                                 <p class="text-error">{$error.password2}</p>
                             </div>
                         </div>
-                        <button class="btn btn-large btn-primary" type="submit"><i class="icon-user icon-white"></i>  {#create_label#}</button>
+                        <button class="btn btn-primary" type="submit"><i class="icon-user icon-white"></i>  {#create_label#}</button>
                         <input type="hidden" name="return_to" value="{$return_to}"/>
                         <legend><br></legend>
                             {include file='include/links.tpl'}
@@ -41,6 +41,5 @@
                 {include file='include/info.tpl'}
             </div>
         </div>
-        {include file='include/hideBanner.tpl'}
     </body>
 </html>
