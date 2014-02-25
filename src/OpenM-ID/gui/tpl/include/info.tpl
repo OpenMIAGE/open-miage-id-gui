@@ -1,5 +1,5 @@
-<div class="col-md-8 hidden-phone">
-    <div class="well jumbotron">
+<div class="col-md-8 hidden-xs">
+    <div class="well jumbotron openm-id-info">
         <h1>Bienvenu dans la galaxie OpenMIAGE !</h1>
         <p></p>
         <p>

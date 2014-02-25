@@ -18,7 +18,7 @@
     </head>
     <body class="body">
         <div class="container">
-            <div class="hero-unit">
+            <div class="well jumbotron">
                 <h1 class="hidden-phone">
                     Connexion OpenM-ID confirmée
                 </h1>
@@ -31,7 +31,7 @@
                 <p></p>
                 <p>Vous pouvez vous déconnecter :</p>
                 <p>
-                    <button class="btn btn-large btn-primary" onclick="location.href='{$links.logout}'"><i class="icon-plus-sign icon-white"></i> Se déconnecter</button>
+                    <button class="btn btn-large btn-primary" onclick="location.href = '{$links.logout}'"><i class="glyphicon glyphicon-plus"></i> Se déconnecter</button>
                 </p>
             </div>
         </div>

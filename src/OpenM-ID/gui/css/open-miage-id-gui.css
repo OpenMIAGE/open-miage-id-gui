@@ -1,6 +1,19 @@
+body {
+    padding-top: 40px;
+    padding-bottom: 20px;
+    background-color: white;
+}
+
+.links { 
+    display: inline-block;
+    margin-bottom: 5px;
+}
+.openm-id-form {
+    padding: 0px;
+}
 
 .form-signin {
-    max-width: 420px;
+    max-width: 480px;
     padding: 19px 29px 29px;
     background-color: whitesmoke;
 }
@@ -16,19 +29,26 @@
         -moz-box-shadow: 5px 5px 5px #888;
         box-shadow: 5px 5px 5px #888;
     }
+
 }
 
-@media (max-width: 500px) {
+@media (max-width: 480px) {
     .container-fluid {
         padding: 0px;
     }
-    
+
     .form-signin {
         margin: 0px;
     }
-    
+
     .body {
         padding: 0px;
+    }
+}
+
+@media (min-width: 768px){
+    .openm-id-info {
+        margin-left: 30px;
     }
 }
 
