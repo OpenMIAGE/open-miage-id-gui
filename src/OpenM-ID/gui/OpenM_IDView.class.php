@@ -214,7 +214,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     private function connected(HashtableString $user) {
         $returnTo = new OpenM_ID_ReturnToController();
         if ($returnTo->isReturnTo()) {
-            OpenM_SessionController::remove(self::RETURN_TO_IN_SESSION);
+            $returnTo->removeFromSession();
             OpenM_Log::debug("return_to found and use for redirection", __CLASS__, __METHOD__, __LINE__);
             OpenM_Header::redirect($returnTo->getReturnTo());
         } else {
