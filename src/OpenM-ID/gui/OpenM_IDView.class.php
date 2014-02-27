@@ -29,28 +29,31 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     const HASH_ALGO = "OpenM_ID_Account.hash.algo";
     const DEFAULT_ACTIVATION = "OpenM_ID_Account.activation.default";
     const DEFAULT_ACTIVATION_OK = "true";
+    const DEFAULT_REMEMBER_ME = "OpenM_ID_Account.remember-me.default";
+    const DEFAULT_REMEMBER_ME_OK = "true";
+    const SMARTY_IS_RESPONSE = "isResponse";
 
-    private static $secret;
-    private static $hashAlgo;
-    private static $defaultAccountActivation = false;
+    private $secret;
+    private $hashAlgo;
+    private $defaultAccountActivation = false;
+    private $defaultRememberMe = false;
 
     public function __construct() {
         parent::__construct();
-        if (self::$secret !== null)
-            return;
         $path = $this->properties->get(self::SPECIFIC_CONFIG_FILE_NAME);
         if ($path == null)
             throw new OpenM_ServiceViewException(self::SPECIFIC_CONFIG_FILE_NAME . " property is not defined in " . self::CONFIG_FILE_NAME);
         $p2 = Properties::fromFile(OpenM_SERVICE_CONFIG_DIRECTORY . "/" . $path);
-        self::$secret = $p2->get(self::HASH_SECRET);
-        if (self::$secret == null)
+        $this->secret = $p2->get(self::HASH_SECRET);
+        if ($this->secret == null)
             throw new OpenM_ServiceViewException(self::HASH_SECRET . " property is not defined in $path");
         if ($p2->get(self::HASH_ALGO) == null)
             throw new OpenM_ServiceViewException(self::HASH_ALGO . " property is not defined in $path");
-        self::$hashAlgo = $p2->get(self::HASH_ALGO);
-        if (!OpenM_Crypto::isAlgoValid(self::$hashAlgo))
+        $this->hashAlgo = $p2->get(self::HASH_ALGO);
+        if (!OpenM_Crypto::isAlgoValid($this->hashAlgo))
             throw new OpenM_ServiceViewException(self::HASH_ALGO . " property is not a valid crypto algo in $path");
-        self::$defaultAccountActivation = ($p2->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
+        $this->defaultAccountActivation = ($p2->get(self::DEFAULT_ACTIVATION) == self::DEFAULT_ACTIVATION_OK);
+        $this->defaultRememberMe = ($p2->get(self::DEFAULT_REMEMBER_ME) == self::DEFAULT_REMEMBER_ME_OK);
     }
 
     public function _default() {
@@ -65,6 +68,10 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     const PASSWORD2_PARAMETER = "password2";
     const HEAD_PARAMETER = "head";
     const ACTION = "action";
+    const SMARTY_LOGIN_NOT_VALID = "login_not_valid";
+    const SMARTY_PASSWORD_NOT_VALID = "password_not_valid";
+    const SMARTY_MAIL_OR_PASSWORD_NOT_VALID = "mail_or_password_not_valid";
+    const SMARTY_USER_NOT_VALIDATED = "user_not_validated";
 
     public function login() {
         OpenM_Log::debug("API initialized", __CLASS__, __METHOD__, __LINE__);
@@ -79,22 +86,23 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $post = HashtableString::from($_POST);
         $get = HashtableString::from($_GET);
 
-        $rememberMe = ($post->get(self::REMEMBER_ME_PARAMETER) == self::REMEMBER_ME_ON_PAREMETER_VALUE);
+        $rememberMe = $this->defaultRememberMe;
 
         $error = array();
         if ($post->containsKey(self::MAIL_PARAMETER)) {
+            $this->smarty->assign(self::SMARTY_IS_RESPONSE, true);
             OpenM_Log::debug("A mail is given in POST", __CLASS__, __METHOD__, __LINE__);
             if (!OpenM_MailTool::isEMailValid($post->get(self::MAIL_PARAMETER))) {
                 OpenM_Log::debug("Mail given is not a valid mail", __CLASS__, __METHOD__, __LINE__);
                 $error = array(
-                    self::MAIL_PARAMETER => "mail not valid"
+                    self::MAIL_PARAMETER => self::SMARTY_LOGIN_NOT_VALID
                 );
             } else {
                 OpenM_Log::debug("Mail given is a valid mail (" . $_POST["mail"] . ")", __CLASS__, __METHOD__, __LINE__);
                 if (!$post->containsKey(self::PASSWORD_PARAMETER) || $post->get(self::PASSWORD_PARAMETER) == "") {
                     OpenM_Log::debug("No password given", __CLASS__, __METHOD__, __LINE__);
                     $error = array(
-                        self::PASSWORD_PARAMETER => "password not valid"
+                        self::PASSWORD_PARAMETER => self::SMARTY_PASSWORD_NOT_VALID
                     );
                 } else {
                     OpenM_Log::debug("Password given not empty", __CLASS__, __METHOD__, __LINE__);
@@ -103,22 +111,22 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                     if ($user == null) {
                         OpenM_Log::debug("User not found in DAO", __CLASS__, __METHOD__, __LINE__);
                         $error = array(
-                            self::HEAD_PARAMETER => "mail or password not valid"
+                            self::HEAD_PARAMETER => self::SMARTY_MAIL_OR_PASSWORD_NOT_VALID
                         );
                     } else {
                         OpenM_Log::debug("User found in DAO", __CLASS__, __METHOD__, __LINE__);
-                        $userPassword = self::getPassword($post->get(self::PASSWORD_PARAMETER));
+                        $userPassword = $this->getPassword($post->get(self::PASSWORD_PARAMETER));
                         if ($user->get(OpenM_UserDAO::USER_PASSWORD) != $userPassword) {
                             OpenM_Log::debug("Password not OK", __CLASS__, __METHOD__, __LINE__);
                             $error = array(
-                                self::HEAD_PARAMETER => "mail or password not valid"
+                                self::PASSWORD_PARAMETER => self::SMARTY_PASSWORD_NOT_VALID
                             );
                         } else {
                             OpenM_Log::debug("Password OK", __CLASS__, __METHOD__, __LINE__);
                             if (!$user->get(OpenM_UserDAO::USER_IS_VALID)) {
                                 OpenM_Log::debug("User not valid", __CLASS__, __METHOD__, __LINE__);
                                 $error = array(
-                                    self::HEAD_PARAMETER => "user not validated",
+                                    self::HEAD_PARAMETER => self::SMARTY_USER_NOT_VALIDATED
                                 );
                             } else {
                                 OpenM_Log::debug("User valid", __CLASS__, __METHOD__, __LINE__);
@@ -169,7 +177,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                     $user = $userDao->get($post->get(self::MAIL_PARAMETER));
                     if ($user == null) {
                         OpenM_Log::debug("No user already registered with same mail", __CLASS__, __METHOD__, __LINE__);
-                        $userId = OpenM_Crypto::hash(self::$hashAlgo, OpenM_URL::encode(self::$secret . $post->get(self::MAIL_PARAMETER) . microtime(true) . self::$secret));
+                        $userId = OpenM_Crypto::hash($this->hashAlgo, OpenM_URL::encode($this->secret . $post->get(self::MAIL_PARAMETER) . microtime(true) . $this->secret));
                         OpenM_Log::debug("User id generated ($userId)", __CLASS__, __METHOD__, __LINE__);
                         if ($post->get(self::PASSWORD_PARAMETER) == "") {
                             OpenM_Log::debug("Password not defined", __CLASS__, __METHOD__, __LINE__);
@@ -179,10 +187,10 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                         } else if ($post->get(self::PASSWORD_PARAMETER) == $post->get(self::PASSWORD2_PARAMETER)) {
                             $userPassword = $this->getPassword($post->get(self::PASSWORD_PARAMETER));
                             $userMail = $post->get(self::MAIL_PARAMETER);
-                            $userDao->create($userId, $userMail, $userPassword, self::$defaultAccountActivation);
+                            $userDao->create($userId, $userMail, $userPassword, $this->defaultAccountActivation);
                             OpenM_Log::debug("User created", __CLASS__, __METHOD__, __LINE__);
                             OpenM_Log::debug("redirect to login page", __CLASS__, __METHOD__, __LINE__);
-                            $this->_redirect("login");
+                            $this->login();
                         } else {
                             OpenM_Log::debug("Password2 not same as Password", __CLASS__, __METHOD__, __LINE__);
                             $error = array(
@@ -229,7 +237,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     }
 
     private function getPassword($password) {
-        return OpenM_Crypto::hash(self::$hashAlgo, OpenM_URL::encode(self::$secret . $password . self::$secret));
+        return OpenM_Crypto::hash($this->hashAlgo, OpenM_URL::encode($this->secret . $password . $this->secret));
     }
 
 }
