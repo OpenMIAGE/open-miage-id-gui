@@ -212,8 +212,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                             else {
                                 OpenM_Log::debug("Password2 not same as Password", __CLASS__, __METHOD__, __LINE__);
                                 $error = array(
-                                    self::SMARTY_PASSWORD => self::SMARTY_NOT_THE_SAME_PASSWORD,
-                                    self::SMARTY_PASSWORD2 => self::SMARTY_NOT_THE_SAME_PASSWORD
+                                    self::SMARTY_HEAD => self::SMARTY_NOT_THE_SAME_PASSWORD
                                 );
                             }
                         }
