@@ -24,7 +24,12 @@ Import::php("util.OpenM_Log");
 abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
 
     const VERSION = "1.0.3";
-
+    
+    public function __construct() {
+        parent::__construct();
+        $this->setDirs();
+        $this->addLinks();
+    }
 
     protected function addLinks() {
         $this->smarty->assign("links", array(
@@ -35,11 +40,11 @@ abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
     }
 
     protected function setDirs() {
-        $this->smarty->setTemplateDir(__DIR__ . '/tpl/');
-        $this->smarty->setConfigDir(__DIR__ . '/config/');
+        $this->smarty->setTemplateDir('Config/tpl/');
+        $this->smarty->setConfigDir('Config/properties/');
         $this->smarty->setCompileDir($this->template_c);
-        $this->smarty->setCacheDir($this->cache_dir);
-        $this->smarty->assign(self::SMARTY_RESOURCES_DIR_VAR_NAME, $this->resources_dir);
+        $this->smarty->assign(self::SMARTY_RESOURCES_DIR_VAR_NAME, $this->ressources_dir);
+        $this->smarty->assign(self::SMARTY_ROOT_DIR_VAR_NAME, OpenM_URLViewController::getRoot());
     }
 
 }
