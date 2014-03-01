@@ -28,7 +28,7 @@
                         <label class="control-label">{#$error.head#}</label>
                     </div>{/if}    
                     <label class="checkbox button-inline">
-                        <input type="checkbox" name="remember-me" {if $rememberMe}checked{/if}>{#remember_me_label#}
+                        <input type="checkbox" name="remember_me" {if $remember_me}checked{/if}>{#remember_me_label#}
                     </label>
                     <button class="btn btn-info button-inline" type="submit"><i class="glyphicon glyphicon-user"> </i>  {#connection_label#}</button>
                     <input type="hidden" name="return_to" value="{$return_to}"/>

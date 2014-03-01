@@ -59,7 +59,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->login();
     }
 
-    const REMEMBER_ME_PARAMETER = "remember-me";
+    const REMEMBER_ME_PARAMETER = "remember_me";
     const SMARTY_REMEMBER_ME = self::REMEMBER_ME_PARAMETER;
     const REMEMBER_ME_ON_PAREMETER_VALUE = "on";
     const MAIL_PARAMETER = "mail";
@@ -153,8 +153,6 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->smarty->assign(self::REMEMBER_ME_PARAMETER, $rememberMe);
         $returnTo = new OpenM_ID_ReturnToController();
         $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
-        $this->setDirs();
-        $this->addLinks();
         $this->smarty->assign(self::SMARTY_LANG, OpenM_URLViewController::getLang());
         $this->smarty->display('login.tpl');
     }
@@ -231,8 +229,6 @@ class OpenM_IDView extends OpenM_IDCommonsView {
             $this->smarty->assign(self::SMARTY_VERSION, self::VERSION);
             $returnTo = new OpenM_ID_ReturnToController();
             $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
-            $this->setDirs();
-            $this->addLinks();
             $this->smarty->assign(self::SMARTY_LANG, OpenM_URLViewController::getLang());
             $this->smarty->display('create.tpl');
         }
@@ -246,10 +242,8 @@ class OpenM_IDView extends OpenM_IDCommonsView {
             OpenM_Header::redirect($returnTo->getReturnTo());
         } else {
             OpenM_Log::debug("display connected page", __CLASS__, __METHOD__, __LINE__);
-            $this->smarty->assign(self::SMARTY_LANG, self::VERSION);
+            $this->smarty->assign(self::SMARTY_VERSION, self::VERSION);
             $this->smarty->assign(self::SMARTY_MAIL, $user->get(OpenM_UserDAO::USER_MAIL));
-            $this->setDirs();
-            $this->addLinks();
             $this->smarty->display('connected.tpl');
             die();
         }

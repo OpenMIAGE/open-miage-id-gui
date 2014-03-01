@@ -42,7 +42,7 @@ class OpenM_ID_APIServer {
             $openM_ID_Server->uriDisplay();
         } else if (isset($_GET[OpenM_ID::LOGOUT_API])) {
             $openM_ID_Server->logout(false);
-        } else if (isset($_GET[OpenM_ID::LOGIN_API])) {
+        } else if (isset($_GET[OpenM_ID::LOGIN_API]) || isset($_GET[OpenM_ID::MY_ACCOUNT_API])) {
             // do nothing
         } else {
             $openM_ID_Server->handle();

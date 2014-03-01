@@ -24,6 +24,12 @@ Import::php("util.OpenM_Log");
 abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
 
     const VERSION = "1.0.3";
+    
+    public function __construct() {
+        parent::__construct();
+        $this->setDirs();
+        $this->addLinks();
+    }
 
     protected function addLinks() {
         $this->smarty->assign("links", array(
