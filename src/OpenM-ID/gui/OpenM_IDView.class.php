@@ -78,7 +78,6 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     const SMARTY_IS_RESPONSE = "isResponse";
     const SMARTY_VERSION = "version";
     const SMARTY_RETURN_TO = "return_to";
-    const SMARTY_LANG = "lang";
 
     public function login() {
         OpenM_Log::debug("API initialized", __CLASS__, __METHOD__, __LINE__);
@@ -155,7 +154,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
         $this->setDirs();
         $this->addLinks();
-        $this->smarty->assign(self::SMARTY_LANG, OpenM_URLViewController::getLang());
+        $this->setLang();
         $this->smarty->display('login.tpl');
     }
 
@@ -233,7 +232,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
             $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
             $this->setDirs();
             $this->addLinks();
-            $this->smarty->assign(self::SMARTY_LANG, OpenM_URLViewController::getLang());
+            $this->setLang();
             $this->smarty->display('create.tpl');
         }
     }
@@ -246,7 +245,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
             OpenM_Header::redirect($returnTo->getReturnTo());
         } else {
             OpenM_Log::debug("display connected page", __CLASS__, __METHOD__, __LINE__);
-            $this->smarty->assign(self::SMARTY_LANG, self::VERSION);
+            $this->setLang();
             $this->smarty->assign(self::SMARTY_MAIL, $user->get(OpenM_UserDAO::USER_MAIL));
             $this->setDirs();
             $this->addLinks();
