@@ -29,9 +29,9 @@ class OpenM_IDErrorView extends OpenM_IDCommonsView {
     }
 
     public function error404() {
-        OpenM_Header::add("page not found",404);
         die("page not found");
     }
+
 }
 
 ?>
