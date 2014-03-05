@@ -30,7 +30,7 @@ abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
         $this->smarty->assign("links", array(
             "login" => OpenM_URLViewController::from($this->getClass(), "login")->getURL(),
             "logout" => OpenM_URL::getDirURL() . "../" . "?" . OpenM_ID::LOGOUT_API,
-            "create" => OpenM_URLViewController::from($this->getClass(), "create")->getURL()
+            "create" => OpenM_URLViewController::from($this->getClass(), "register")->getURL()
         ));
     }
 
