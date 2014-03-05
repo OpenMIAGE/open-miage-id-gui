@@ -42,7 +42,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $path = $this->properties->get(self::SPECIFIC_CONFIG_FILE_NAME);
         if ($path == null)
             throw new OpenM_ServiceViewException(self::SPECIFIC_CONFIG_FILE_NAME . " property is not defined in " . self::CONFIG_FILE_NAME);
-        $p2 = Properties::fromFile(OpenM_SERVICE_CONFIG_DIRECTORY . "/" . $path);
+        $p2 = Properties::fromFile(dirname(self::CONFIG_FILE_NAME) . "/" . $path);
         $this->secret = $p2->get(self::HASH_SECRET);
         if ($this->secret == null)
             throw new OpenM_ServiceViewException(self::HASH_SECRET . " property is not defined in $path");
@@ -59,7 +59,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->login();
     }
 
-    const REMEMBER_ME_PARAMETER = "remember-me";
+    const REMEMBER_ME_PARAMETER = "remember_me";
     const SMARTY_REMEMBER_ME = self::REMEMBER_ME_PARAMETER;
     const REMEMBER_ME_ON_PAREMETER_VALUE = "on";
     const MAIL_PARAMETER = "mail";
@@ -91,8 +91,6 @@ class OpenM_IDView extends OpenM_IDCommonsView {
 
         $post = HashtableString::from($_POST);
         $get = HashtableString::from($_GET);
-
-        $rememberMe = $this->defaultRememberMe;
 
         $error = array();
         if ($post->containsKey(self::MAIL_PARAMETER)) {
@@ -136,7 +134,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                                 );
                             } else {
                                 OpenM_Log::debug("User valid", __CLASS__, __METHOD__, __LINE__);
-                                $userConnectedController->set($user, $rememberMe);
+                                $userConnectedController->set($user, $this->defaultRememberMe);
                                 $this->connected($user);
                             }
                         }
@@ -149,7 +147,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->smarty->assign(self::SMARTY_ACTION, OpenM_URLViewController::from($this->getClass(), "login")->getURL());
         $this->smarty->assign(self::SMARTY_VERSION, self::VERSION);
         $this->smarty->assign(self::MAIL_PARAMETER, $mail);
-        $this->smarty->assign(self::REMEMBER_ME_PARAMETER, $rememberMe);
+        $this->smarty->assign(self::REMEMBER_ME_PARAMETER, $this->defaultRememberMe);
         $returnTo = new OpenM_ID_ReturnToController();
         $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
         $this->setDirs();
