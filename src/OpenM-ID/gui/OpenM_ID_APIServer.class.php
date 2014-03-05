@@ -35,7 +35,7 @@ class OpenM_ID_APIServer {
         $returnTo = new OpenM_ID_ReturnToController();
         $openM_ID_Server = new OpenM_ID_OpenID();
         if (isset($_GET["api"]) || OpenM_RESTDefaultServer::containsHelpKeyWork(array_keys($_GET))) {
-            OpenM_RESTDefaultServer::handle(array("OpenM_ID"));
+            return OpenM_RESTDefaultServer::handle(array("OpenM_ID"));
         } else if (isset($_GET[OpenM_ID::GetOpenID_API])) {
             $openM_ID_Server->getOpenID();
         } else if (isset($_GET[OpenM_ID::URI_API])) {
