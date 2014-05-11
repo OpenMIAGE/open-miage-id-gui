@@ -6,5 +6,6 @@ require_once dirname(__DIR__) . '/lib.php';
 
 Import::addClassPath();
 Import::php("OpenM-Controller.gui.OpenM_ViewDefaultServer");
-OpenM_ViewDefaultServer::handle();
+$server = new OpenM_ViewDefaultServer();
+$server->handle();
 ?>

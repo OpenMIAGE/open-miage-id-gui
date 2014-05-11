@@ -42,7 +42,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $path = $this->properties->get(self::SPECIFIC_CONFIG_FILE_NAME);
         if ($path == null)
             throw new OpenM_ServiceViewException(self::SPECIFIC_CONFIG_FILE_NAME . " property is not defined in " . self::CONFIG_FILE_NAME);
-        $p2 = Properties::fromFile(OpenM_SERVICE_CONFIG_DIRECTORY . "/" . $path);
+        $p2 = Properties::fromFile(dirname(self::CONFIG_FILE_NAME) . "/" . $path);
         $this->secret = $p2->get(self::HASH_SECRET);
         if ($this->secret == null)
             throw new OpenM_ServiceViewException(self::HASH_SECRET . " property is not defined in $path");
@@ -59,7 +59,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->login();
     }
 
-    const REMEMBER_ME_PARAMETER = "remember-me";
+    const REMEMBER_ME_PARAMETER = "remember_me";
     const SMARTY_REMEMBER_ME = self::REMEMBER_ME_PARAMETER;
     const REMEMBER_ME_ON_PAREMETER_VALUE = "on";
     const MAIL_PARAMETER = "mail";
@@ -92,8 +92,6 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $post = HashtableString::from($_POST);
         $get = HashtableString::from($_GET);
 
-        $rememberMe = $this->defaultRememberMe;
-
         $error = array();
         if ($post->containsKey(self::MAIL_PARAMETER)) {
             $this->smarty->assign(self::SMARTY_IS_RESPONSE, true);
@@ -113,7 +111,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                 } else {
                     OpenM_Log::debug("Password given not empty", __CLASS__, __METHOD__, __LINE__);
                     $userDao = new OpenM_UserDAO();
-                    $user = $userDao->get($post->get(self::MAIL_PARAMETER));
+                    $user = $userDao->get(strtolower($post->get(self::MAIL_PARAMETER)));
                     if ($user == null) {
                         OpenM_Log::debug("User not found in DAO", __CLASS__, __METHOD__, __LINE__);
                         $error = array(
@@ -136,7 +134,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                                 );
                             } else {
                                 OpenM_Log::debug("User valid", __CLASS__, __METHOD__, __LINE__);
-                                $userConnectedController->set($user, $rememberMe);
+                                $userConnectedController->set($user, $this->defaultRememberMe);
                                 $this->connected($user);
                             }
                         }
@@ -149,7 +147,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
         $this->smarty->assign(self::SMARTY_ACTION, OpenM_URLViewController::from($this->getClass(), "login")->getURL());
         $this->smarty->assign(self::SMARTY_VERSION, self::VERSION);
         $this->smarty->assign(self::MAIL_PARAMETER, $mail);
-        $this->smarty->assign(self::REMEMBER_ME_PARAMETER, $rememberMe);
+        $this->smarty->assign(self::REMEMBER_ME_PARAMETER, $this->defaultRememberMe);
         $returnTo = new OpenM_ID_ReturnToController();
         $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());
         $this->setDirs();
@@ -163,7 +161,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
     const SMARTY_PASSWORD2_NOT_FOUND = "password2_not_found";
     const SMARTY_NOT_THE_SAME_PASSWORD = "not_the_same_password";
 
-    public function create() {
+    public function register() {
         OpenM_Log::debug("API initialized", __CLASS__, __METHOD__, __LINE__);
         OpenM_Log::debug("check if a user is connected", __CLASS__, __METHOD__, __LINE__);
         $userConnectedController = new OpenM_ID_ConnectedUserController();
@@ -186,7 +184,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                 } else {
                     OpenM_Log::debug("Given mail is valid", __CLASS__, __METHOD__, __LINE__);
                     $userDao = new OpenM_UserDAO();
-                    $user = $userDao->get($post->get(self::MAIL_PARAMETER));
+                    $user = $userDao->get(strtolower($post->get(self::MAIL_PARAMETER)));
                     if ($user == null) {
                         OpenM_Log::debug("No user already registered with same mail", __CLASS__, __METHOD__, __LINE__);
                         $userId = OpenM_Crypto::hash($this->hashAlgo, OpenM_URL::encode($this->secret . $post->get(self::MAIL_PARAMETER) . microtime(true) . $this->secret));
@@ -198,7 +196,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
                             );
                         } else if ($post->get(self::PASSWORD_PARAMETER) == $post->get(self::PASSWORD2_PARAMETER)) {
                             $userPassword = $this->getPassword($post->get(self::PASSWORD_PARAMETER));
-                            $userMail = $post->get(self::MAIL_PARAMETER);
+                            $userMail = strtolower($post->get(self::MAIL_PARAMETER));
                             $userDao->create($userId, $userMail, $userPassword, $this->defaultAccountActivation);
                             OpenM_Log::debug("User created", __CLASS__, __METHOD__, __LINE__);
                             OpenM_Log::debug("redirect to login page", __CLASS__, __METHOD__, __LINE__);
@@ -226,7 +224,7 @@ class OpenM_IDView extends OpenM_IDCommonsView {
             OpenM_Log::debug("Display create account page", __CLASS__, __METHOD__, __LINE__);
             $this->smarty->assign(self::SMARTY_ERROR, $error);
             $this->smarty->assign(self::MAIL_PARAMETER, $post->get(self::MAIL_PARAMETER));
-            $this->smarty->assign(self::SMARTY_ACTION, OpenM_URLViewController::from($this->getClass(), "create")->getURL());
+            $this->smarty->assign(self::SMARTY_ACTION, OpenM_URLViewController::from($this->getClass(), "register")->getURL());
             $this->smarty->assign(self::SMARTY_VERSION, self::VERSION);
             $returnTo = new OpenM_ID_ReturnToController();
             $this->smarty->assign(self::SMARTY_RETURN_TO, $returnTo->getReturnTo());

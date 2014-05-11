@@ -30,7 +30,7 @@ abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
         $this->smarty->assign("links", array(
             "login" => OpenM_URLViewController::from($this->getClass(), "login")->getURL(),
             "logout" => OpenM_URL::getDirURL() . "../" . "?" . OpenM_ID::LOGOUT_API,
-            "create" => OpenM_URLViewController::from($this->getClass(), "create")->getURL()
+            "create" => OpenM_URLViewController::from($this->getClass(), "register")->getURL()
         ));
     }
 
@@ -43,8 +43,10 @@ abstract class OpenM_IDCommonsView extends OpenM_ServiceView {
     }
 
     protected function setLang() {
-        if (!is_file("Config/properties/links." . OpenM_URLViewController::getLang() . ".properties"))
-            OpenM_ViewDefaultServer::get404()->redirect();
+        if (!is_file("Config/properties/links." . OpenM_URLViewController::getLang() . ".properties")){
+            $server = new OpenM_ViewDefaultServer();
+            $server->get404()->redirect();
+        }
         $this->smarty->assign(self::SMARTY_LANG, OpenM_URLViewController::getLang());
     }
 
